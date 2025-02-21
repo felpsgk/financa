@@ -1,0 +1,46 @@
+body {
+  font-family: 'Arial', sans-serif;
+  padding-top: 56px;
+  background-color: #eaf4e2;
+}
+.hero {
+  background-color: #87b189;
+  color: #2c5e2e;
+  padding: 120px 20px;
+  text-align: center;
+}
+.hero-text {
+  color: #e4e4e4;
+}
+.btn-custom {
+  background-color: #77c997;
+  color: white;
+  border-radius: 5px;
+}
+.btn-custom:hover {
+  background-color: #48af6f;
+  color: white;
+}
+.carousel-item img {
+  height: 500px;
+  object-fit: cover;
+}
+.card {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #d8e8d1;
+}
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1030;
+  background-color: #cfe8d5;
+}
+.bg-light {
+  background-color: #e0f2e0 !important;
+}
+.img-desc {
+  text-shadow: #00ff62 1px 1px 5px;
+}
