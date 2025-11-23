@@ -13,7 +13,7 @@ class BottomNavBar extends ConsumerWidget {
     return SafeArea(
       top: false,
       child: Container(
-        decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8, offset: const Offset(0, -2))]),
+        decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 8, offset: const Offset(0, -2))]),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -106,6 +106,7 @@ class _LogoutButton extends ConsumerWidget {
       onPressed: () async {
         HapticFeedback.selectionClick();
         Feedback.forTap(context);
+        final NavigatorState nav = Navigator.of(context);
         final bool? confirm = await showDialog<bool>(
           context: context,
           builder: (ctx) {
@@ -122,7 +123,7 @@ class _LogoutButton extends ConsumerWidget {
         if (confirm == true) {
           ref.read(userIdProvider.notifier).state = null;
           ref.read(bottomNavIndexProvider.notifier).state = 0;
-          Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+          nav.pushNamedAndRemoveUntil('/login', (route) => false);
         }
       },
       icon: const Icon(Icons.logout),

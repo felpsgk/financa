@@ -5,6 +5,7 @@ import '../controllers/movements_controller.dart';
 import '../models/movement.dart';
 import '../../../core/navigation_provider.dart';
 import '../../../widgets/bottom_nav.dart';
+import 'package:intl/intl.dart';
 
 class MovementsListPage extends ConsumerStatefulWidget {
   const MovementsListPage({super.key});
@@ -51,16 +52,18 @@ class _MovementsListPageState extends ConsumerState<MovementsListPage> {
                     Expanded(
                       child: TextField(
                         controller: startCtrl,
-                        decoration: const InputDecoration(labelText: 'Data inicial (YYYY-MM-DD)'),
-                        onSubmitted: (_) => applyFilter(),
+                        readOnly: true,
+                        decoration: const InputDecoration(labelText: 'Data inicial (dd/mm/yyyy)'),
+                        onTap: () => pickDate(startCtrl),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: TextField(
                         controller: endCtrl,
-                        decoration: const InputDecoration(labelText: 'Data final (YYYY-MM-DD)'),
-                        onSubmitted: (_) => applyFilter(),
+                        readOnly: true,
+                        decoration: const InputDecoration(labelText: 'Data final (dd/mm/yyyy)'),
+                        onTap: () => pickDate(endCtrl),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -80,8 +83,22 @@ class _MovementsListPageState extends ConsumerState<MovementsListPage> {
   }
 
   void applyFilter() {
-    ref.read(movementsControllerProvider.notifier).setDateRange(startDate: startCtrl.text.isEmpty ? null : startCtrl.text, endDate: endCtrl.text.isEmpty ? null : endCtrl.text);
+    ref.read(movementsControllerProvider.notifier).setDateRange(startDate: startCtrl.text.isEmpty ? null : toIso(startCtrl.text), endDate: endCtrl.text.isEmpty ? null : toIso(endCtrl.text));
     ref.read(movementsControllerProvider.notifier).load();
+  }
+
+  void pickDate(TextEditingController ctrl) async {
+    final DateTime now = DateTime.now();
+    final DateTime? picked = await showDatePicker(context: context, initialDate: now, firstDate: DateTime(2000), lastDate: DateTime(2100));
+    if (picked != null) {
+      ctrl.text = DateFormat('dd/MM/yyyy').format(picked);
+    }
+  }
+
+  String toIso(String v) {
+    final List<String> parts = v.split('/');
+    final DateTime dt = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+    return DateFormat('yyyy-MM-dd').format(dt);
   }
 }
 

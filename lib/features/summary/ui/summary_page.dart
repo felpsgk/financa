@@ -49,7 +49,6 @@ class SummaryPage extends ConsumerWidget {
   }
 
   void _load(WidgetRef ref, int? userId) {
-    print('userId: $userId');
     if (userId == null) return;
     ref.read(movementsControllerProvider.notifier).load();
   }

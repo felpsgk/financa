@@ -1,5 +1,8 @@
 import '../models/movement.dart';
 import 'movements_api.dart';
+import '../models/movement_type.dart';
+import '../models/category.dart';
+import '../models/account.dart';
 
 class MovementsRepository {
   final MovementsApi api;
@@ -18,6 +21,7 @@ class MovementsRepository {
     required String dtMovimentacao,
     String? dtVencimento,
     required double valor,
+    int? idTipoMovimentacao,
   }) {
     return api.createMovement(
       idpessoa: idpessoa,
@@ -27,6 +31,19 @@ class MovementsRepository {
       dtMovimentacao: dtMovimentacao,
       dtVencimento: dtVencimento,
       valor: valor,
+      idTipoMovimentacao: idTipoMovimentacao,
     );
+  }
+
+  Future<List<MovementType>> getTypes() {
+    return api.fetchTypes();
+  }
+
+  Future<List<Category>> getCategories() {
+    return api.fetchCategories();
+  }
+
+  Future<List<Account>> getAccounts() {
+    return api.fetchAccounts();
   }
 }
