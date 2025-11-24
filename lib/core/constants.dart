@@ -7,6 +7,8 @@ class AppConstants {
   static const String getAccountsPath = 'get_contas.php';
   static const String getContactsPath = 'get_contatos.php';
   static const String createParcelamentoPath = 'create_parcelamento.php';
+  static const String authRegisterPath = 'auth/register.php';
+  static const String authLoginPath = 'auth/login.php';
   static const double moneyMinValue = 0.01;
   static const double moneyMaxValue = 1000000000.0;
 }

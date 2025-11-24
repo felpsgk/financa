@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/navigation_provider.dart';
 import '../features/auth/auth_provider.dart';
+import '../features/auth/session_storage.dart';
 
 class BottomNavBar extends ConsumerWidget {
   const BottomNavBar({super.key});
@@ -121,6 +122,11 @@ class _LogoutButton extends ConsumerWidget {
           },
         );
         if (confirm == true) {
+          const SessionStorage storage = SessionStorage();
+          await storage.delete(key: 'USER_ID');
+          await storage.delete(key: 'SESSION_EXP');
+          await storage.delete(key: 'ACCESS_TOKEN');
+          await storage.delete(key: 'REFRESH_TOKEN');
           ref.read(userIdProvider.notifier).state = null;
           ref.read(bottomNavIndexProvider.notifier).state = 0;
           nav.pushNamedAndRemoveUntil('/login', (route) => false);

@@ -1,6 +1,8 @@
+import 'package:financas_app/features/auth/InitPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/auth/login_page.dart';
+import '../features/auth/register_page.dart';
 import '../features/summary/ui/summary_page.dart';
 import '../features/movements/ui/movements_list_page.dart';
 import '../features/movements/ui/create_movement_page.dart';
@@ -15,10 +17,11 @@ class App extends ConsumerWidget {
       theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo), useMaterial3: true),
       initialRoute: '/login',
       routes: {
-        '/login': (_) => const LoginPage(),
+        '/login': (_) => const InitPage(),
         '/summary': (_) => const SummaryPage(),
         '/movements': (_) => const MovementsListPage(),
         '/create': (_) => const CreateMovementPage(),
+        '/register': (_) => const RegisterPage(),
       },
     );
   }
