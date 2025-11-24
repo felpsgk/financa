@@ -77,6 +77,7 @@ class MovementsApi {
     int? idContato,
     int? isPago,
     String? dtPagamento,
+    String? contatoNome,
   }) async {
     final Uri uri = buildCreateMovementUri();
     final Map<String, dynamic> body = {
@@ -94,6 +95,7 @@ class MovementsApi {
       if (idContato != null) 'id_contato': idContato,
       if (isPago != null) 'is_pago': isPago,
       if (dtPagamento != null) 'dt_pagamento': dtPagamento,
+      if (contatoNome != null && contatoNome.isNotEmpty) 'contato_nome': contatoNome,
     };
     dev.log('createMovement: POST $uri');
     dev.log('createMovement body keys: ${body.keys.toList()}');
@@ -128,6 +130,7 @@ class MovementsApi {
     int? idContato,
     int? idTipoMovimentacao,
     int? idCategoria,
+    String? contatoNome,
   }) async {
     final String base = AppConstants.apiBaseUrl;
     final String path = AppConstants.createParcelamentoPath;
@@ -147,6 +150,7 @@ class MovementsApi {
       'id_contato': idContato,
       'id_tipo_movimentacao': idTipoMovimentacao,
       'id_categoria': idCategoria,
+      if (contatoNome != null && contatoNome.isNotEmpty) 'contato_nome': contatoNome,
     };
     dev.log('createParcelamento: POST $uri');
     dev.log('createParcelamento body: ${body}');

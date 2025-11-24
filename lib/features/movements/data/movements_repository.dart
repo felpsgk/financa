@@ -29,6 +29,7 @@ class MovementsRepository {
     int? idContato,
     int? isPago,
     String? dtPagamento,
+    String? contatoNome,
   }) {
     return api.createMovement(
       idpessoa: idpessoa,
@@ -45,6 +46,7 @@ class MovementsRepository {
       idContato: idContato,
       isPago: isPago,
       dtPagamento: dtPagamento,
+      contatoNome: contatoNome,
     );
   }
 
@@ -78,6 +80,7 @@ class MovementsRepository {
     int? idContato,
     int? idTipoMovimentacao,
     int? idCategoria,
+    String? contatoNome,
   }) {
     return api.createParcelamento(
       idpessoa: idpessoa,
@@ -93,6 +96,7 @@ class MovementsRepository {
       idContato: idContato,
       idTipoMovimentacao: idTipoMovimentacao,
       idCategoria: idCategoria,
+      contatoNome: contatoNome,
     );
   }
 }

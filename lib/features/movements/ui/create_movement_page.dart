@@ -30,6 +30,7 @@ class _CreateMovementPageState extends ConsumerState<CreateMovementPage> {
   final TextEditingController dtVencCtrl = TextEditingController();
   final TextEditingController valorCtrl = TextEditingController();
   final TextEditingController parcelasCtrl = TextEditingController();
+  final TextEditingController contatoNomeCtrl = TextEditingController();
   bool isSubmitting = false;
   List<MovementType> types = const [];
   MovementType? selectedType;
@@ -118,14 +119,55 @@ class _CreateMovementPageState extends ConsumerState<CreateMovementPage> {
                     decoration: const InputDecoration(labelText: 'Conta bancária'),
                     validator: (v) => v == null ? 'Obrigatório' : null,
                   ),
-                  DropdownButtonFormField<Contact>(
-                    isExpanded: true,
-                    hint: const Text('Selecione quem pagou'),
-                    disabledHint: const Text('Carregando...'),
-                    initialValue: selectedContact,
-                    items: contacts.map((c) => DropdownMenuItem<Contact>(value: c, child: Text(c.nome))).toList(),
-                    onChanged: isLoadingContacts ? null : (v) => setState(() => selectedContact = v),
-                    decoration: const InputDecoration(labelText: 'Contato (quem pagou)'),
+                  Autocomplete<String>(
+                    optionsBuilder: (TextEditingValue v) {
+                      if (v.text.isEmpty) return const Iterable<String>.empty();
+                      final String q = v.text.toLowerCase();
+                      return contacts.map((c) => c.nome).where((n) => n.toLowerCase().contains(q));
+                    },
+                    onSelected: (String sel) {
+                      final Contact c = contacts.firstWhere(
+                        (e) => e.nome == sel,
+                        orElse: () => Contact(id: 0, nome: ''),
+                      );
+                      setState(() {
+                        selectedContact = c.id == 0 ? null : c;
+                        contatoNomeCtrl.text = c.id == 0 ? sel : '';
+                      });
+                    },
+                    fieldViewBuilder: (context, ctrl, focus, onFieldSubmitted) {
+                      return TextFormField(
+                        controller: ctrl,
+                        focusNode: focus,
+                        onChanged: (v) => contatoNomeCtrl.text = v,
+                        decoration: const InputDecoration(labelText: 'Contato (quem pagou)', hintText: 'Pesquise ou informe novo nome'),
+                      );
+                    },
+                    optionsViewBuilder: (context, onSelected, options) {
+                      return Align(
+                        alignment: Alignment.topLeft,
+                        child: Material(
+                          elevation: 4,
+                          borderRadius: BorderRadius.circular(8),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 200, maxWidth: 600),
+                            child: ListView.separated(
+                              padding: EdgeInsets.zero,
+                              shrinkWrap: true,
+                              itemCount: options.length,
+                              separatorBuilder: (_, __) => const Divider(height: 1),
+                              itemBuilder: (context, index) {
+                                final String opt = options.elementAt(index);
+                                return ListTile(
+                                  title: Text(opt),
+                                  onTap: () => onSelected(opt),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   TextFormField(
                     controller: nomeCtrl,
@@ -157,12 +199,6 @@ class _CreateMovementPageState extends ConsumerState<CreateMovementPage> {
                     validator: (v) => _validateDate(v, required: false),
                     onTap: () => _pickDate(context, dtVencCtrl),
                   ),
-                  TextFormField(
-                    controller: parcelasCtrl,
-                    decoration: const InputDecoration(labelText: 'Parcelamento (qtd parcelas)'),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  ),
                   DropdownButtonFormField<String>(
                     isExpanded: true,
                     hint: const Text('Selecione a recorrência'),
@@ -177,6 +213,13 @@ class _CreateMovementPageState extends ConsumerState<CreateMovementPage> {
                     onChanged: (v) => setState(() => selectedRecurrence = v),
                     decoration: const InputDecoration(labelText: 'Recorrência'),
                   ),
+                  if ((selectedRecurrence ?? 'Unica') != 'Unica')
+                    TextFormField(
+                      controller: parcelasCtrl,
+                      decoration: const InputDecoration(labelText: 'Parcelamento (qtd parcelas)'),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    ),
                   Focus(
                     onFocusChange: (hasFocus) {
                       if (!hasFocus) {
@@ -246,6 +289,7 @@ class _CreateMovementPageState extends ConsumerState<CreateMovementPage> {
       final int? idLocalOrigem = isEntrada ? null : selectedAccount?.id;
       final int? idLocalDestino = isEntrada ? selectedAccount?.id : null;
       final int? idContato = selectedContact?.id;
+      final String contatoNome = idContato == null ? contatoNomeCtrl.text.trim() : '';
       final String recurrenceType = selectedRecurrence ?? 'Unica';
       final int? qtdParcelas = parcelasCtrl.text.isEmpty ? null : int.tryParse(parcelasCtrl.text);
       final bool useParcelamento = (qtdParcelas != null && qtdParcelas > 1) || (recurrenceType != 'Unica');
@@ -264,6 +308,7 @@ class _CreateMovementPageState extends ConsumerState<CreateMovementPage> {
           idContato: idContato,
           idTipoMovimentacao: selectedType?.id,
           idCategoria: idCategoria,
+          contatoNome: contatoNome,
         );
       } else {
         await repo.create(
@@ -281,6 +326,7 @@ class _CreateMovementPageState extends ConsumerState<CreateMovementPage> {
           idContato: idContato,
           isPago: 0,
           dtPagamento: isoDue,
+          contatoNome: contatoNome,
         );
       }
       if (!mounted) return;
