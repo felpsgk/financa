@@ -8,6 +8,7 @@ import '../models/movement_type.dart';
 import '../../../core/input_formatters/money_input_formatter.dart';
 import '../models/category.dart';
 import '../models/account.dart';
+import '../models/contact.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants.dart';
 import '../../../core/navigation_provider.dart';
@@ -40,6 +41,9 @@ class _CreateMovementPageState extends ConsumerState<CreateMovementPage> {
   Account? selectedAccount;
   bool isLoadingAccounts = true;
   String? selectedRecurrence;
+  List<Contact> contacts = const [];
+  Contact? selectedContact;
+  bool isLoadingContacts = true;
   @override
   void initState() {
     super.initState();
@@ -47,6 +51,7 @@ class _CreateMovementPageState extends ConsumerState<CreateMovementPage> {
     _loadTypes();
     _loadCategories();
     _loadAccounts();
+    _loadContacts();
   }
 
   @override
@@ -87,12 +92,11 @@ class _CreateMovementPageState extends ConsumerState<CreateMovementPage> {
                           ),
                         )
                         .toList(),
-                    onChanged: isLoadingTypes
-                        ? null
-                        : (v) => setState(() => selectedType = v),
+                    onChanged: isLoadingTypes ? null : (v) => setState(() => selectedType = v),
                     decoration: const InputDecoration(
                       labelText: 'Tipo de movimentação',
                     ),
+                    validator: (v) => v == null ? 'Obrigatório' : null,
                   ),
                   DropdownButtonFormField<Category>(
                     isExpanded: true,
@@ -113,6 +117,15 @@ class _CreateMovementPageState extends ConsumerState<CreateMovementPage> {
                     onChanged: isLoadingAccounts ? null : (v) => setState(() => selectedAccount = v),
                     decoration: const InputDecoration(labelText: 'Conta bancária'),
                     validator: (v) => v == null ? 'Obrigatório' : null,
+                  ),
+                  DropdownButtonFormField<Contact>(
+                    isExpanded: true,
+                    hint: const Text('Selecione quem pagou'),
+                    disabledHint: const Text('Carregando...'),
+                    initialValue: selectedContact,
+                    items: contacts.map((c) => DropdownMenuItem<Contact>(value: c, child: Text(c.nome))).toList(),
+                    onChanged: isLoadingContacts ? null : (v) => setState(() => selectedContact = v),
+                    decoration: const InputDecoration(labelText: 'Contato (quem pagou)'),
                   ),
                   TextFormField(
                     controller: nomeCtrl,
@@ -228,16 +241,48 @@ class _CreateMovementPageState extends ConsumerState<CreateMovementPage> {
       if (selectedType != null && selectedType!.isEntrada == false && val > 0) {
         val = -val;
       }
-      await repo.create(
-        idpessoa: idpessoa,
-        tipoMovimentacao: selectedType?.nome ?? tipoCtrl.text,
-        nomeMovimentacao: nomeCtrl.text,
-        dscMovimentacao: dscCtrl.text.isEmpty ? null : dscCtrl.text,
-        dtMovimentacao: isoDate,
-        dtVencimento: isoDue,
-        valor: val,
-        idTipoMovimentacao: selectedType?.id,
-      );
+      final int? idCategoria = selectedCategory?.id;
+      final bool isEntrada = selectedType?.isEntrada == true;
+      final int? idLocalOrigem = isEntrada ? null : selectedAccount?.id;
+      final int? idLocalDestino = isEntrada ? selectedAccount?.id : null;
+      final int? idContato = selectedContact?.id;
+      final String recurrenceType = selectedRecurrence ?? 'Unica';
+      final int? qtdParcelas = parcelasCtrl.text.isEmpty ? null : int.tryParse(parcelasCtrl.text);
+      final bool useParcelamento = (qtdParcelas != null && qtdParcelas > 1) || (recurrenceType != 'Unica');
+      if (useParcelamento) {
+        await repo.createParcelamento(
+          idpessoa: idpessoa,
+          tipo: isEntrada ? 'entrada' : 'saida',
+          nome: nomeCtrl.text,
+          descricao: dscCtrl.text.isEmpty ? null : dscCtrl.text,
+          qtdParcelas: qtdParcelas ?? 1,
+          recurrenceType: recurrenceType,
+          valorParcela: val.abs(),
+          dtInicio: isoDate,
+          idLocalOrigem: idLocalOrigem,
+          idLocalDestino: idLocalDestino,
+          idContato: idContato,
+          idTipoMovimentacao: selectedType?.id,
+          idCategoria: idCategoria,
+        );
+      } else {
+        await repo.create(
+          idpessoa: idpessoa,
+          tipoMovimentacao: selectedType?.nome ?? tipoCtrl.text,
+          nomeMovimentacao: nomeCtrl.text,
+          dscMovimentacao: dscCtrl.text.isEmpty ? null : dscCtrl.text,
+          dtMovimentacao: isoDate,
+          dtVencimento: isoDue,
+          valor: isEntrada ? val.abs() : -val.abs(),
+          idTipoMovimentacao: selectedType?.id,
+          idCategoria: idCategoria,
+          idLocalOrigem: idLocalOrigem,
+          idLocalDestino: idLocalDestino,
+          idContato: idContato,
+          isPago: 0,
+          dtPagamento: isoDue,
+        );
+      }
       if (!mounted) return;
       Navigator.of(context).pop();
     } catch (_) {
@@ -340,6 +385,22 @@ class _CreateMovementPageState extends ConsumerState<CreateMovementPage> {
       setState(() => isLoadingAccounts = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Falha ao carregar contas')));
+      }
+    }
+  }
+
+  Future<void> _loadContacts() async {
+    try {
+      final MovementsRepository repo = ref.read(movementsRepositoryProvider);
+      final List<Contact> list = await repo.getContacts();
+      setState(() {
+        contacts = list;
+        isLoadingContacts = false;
+      });
+    } catch (_) {
+      setState(() => isLoadingContacts = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Falha ao carregar contatos')));
       }
     }
   }

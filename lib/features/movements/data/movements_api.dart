@@ -6,6 +6,7 @@ import '../models/movement.dart';
 import '../models/movement_type.dart';
 import '../models/category.dart';
 import '../models/account.dart';
+import '../models/contact.dart';
 
 class MovementsApi {
   const MovementsApi();
@@ -45,6 +46,12 @@ class MovementsApi {
     return Uri.parse('$base/$path');
   }
 
+  Uri buildGetContactsUri() {
+    final String base = AppConstants.apiBaseUrl;
+    final String path = AppConstants.getContactsPath;
+    return Uri.parse('$base/$path');
+  }
+
   Future<List<Movement>> fetchMovements({required int idpessoa, String? startDate, String? endDate}) async {
     final Uri uri = buildGetMovementsUri(idpessoa, startDate: startDate, endDate: endDate);
     final http.Response res = await http.get(uri);
@@ -64,6 +71,12 @@ class MovementsApi {
     String? dtVencimento,
     required double valor,
     int? idTipoMovimentacao,
+    int? idCategoria,
+    int? idLocalOrigem,
+    int? idLocalDestino,
+    int? idContato,
+    int? isPago,
+    String? dtPagamento,
   }) async {
     final Uri uri = buildCreateMovementUri();
     final Map<String, dynamic> body = {
@@ -75,11 +88,73 @@ class MovementsApi {
       'dt_vencimento': dtVencimento,
       'valor': valor,
       if (idTipoMovimentacao != null) 'id_tipo_movimentacao': idTipoMovimentacao,
+      if (idCategoria != null) 'id_categoria': idCategoria,
+      if (idLocalOrigem != null) 'id_local_origem': idLocalOrigem,
+      if (idLocalDestino != null) 'id_local_destino': idLocalDestino,
+      if (idContato != null) 'id_contato': idContato,
+      if (isPago != null) 'is_pago': isPago,
+      if (dtPagamento != null) 'dt_pagamento': dtPagamento,
     };
+    dev.log('createMovement: POST $uri');
+    dev.log('createMovement body keys: ${body.keys.toList()}');
+    dev.log('createMovement ids: categoria=$idCategoria, origem=$idLocalOrigem, destino=$idLocalDestino, contato=$idContato, tipoId=$idTipoMovimentacao');
     final http.Response res = await http.post(uri, headers: {'Content-Type': 'application/json'}, body: json.encode(body));
     if (res.statusCode != 201) {
       throw Exception('Failed to create movement');
     }
+  }
+
+  Future<List<Contact>> fetchContacts() async {
+    final Uri uri = buildGetContactsUri();
+    final http.Response res = await http.get(uri);
+    if (res.statusCode != 200) {
+      throw Exception('Failed to load contacts');
+    }
+    final List<dynamic> data = json.decode(res.body) as List<dynamic>;
+    return data.map((e) => Contact.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<Map<String, dynamic>> createParcelamento({
+    required int idpessoa,
+    required String tipo,
+    required String nome,
+    String? descricao,
+    int? qtdParcelas,
+    required String recurrenceType,
+    required double valorParcela,
+    required String dtInicio,
+    int? idLocalOrigem,
+    int? idLocalDestino,
+    int? idContato,
+    int? idTipoMovimentacao,
+    int? idCategoria,
+  }) async {
+    final String base = AppConstants.apiBaseUrl;
+    final String path = AppConstants.createParcelamentoPath;
+    final Uri uri = Uri.parse('$base/$path');
+    final Map<String, dynamic> body = {
+      'idpessoa': idpessoa,
+      'tipo': tipo,
+      'nome': nome,
+      'descricao': descricao,
+      'qtd_parcelas': qtdParcelas,
+      'is_recorrente': recurrenceType.toLowerCase() != 'unica' ? 1 : 0,
+      'recurrence_type': recurrenceType,
+      'valor_parcela': valorParcela,
+      'dt_inicio': dtInicio,
+      'id_local_origem': idLocalOrigem,
+      'id_local_destino': idLocalDestino,
+      'id_contato': idContato,
+      'id_tipo_movimentacao': idTipoMovimentacao,
+      'id_categoria': idCategoria,
+    };
+    dev.log('createParcelamento: POST $uri');
+    dev.log('createParcelamento body: ${body}');
+    final http.Response res = await http.post(uri, headers: {'Content-Type': 'application/json'}, body: json.encode(body));
+    if (res.statusCode != 201) {
+      throw Exception('Failed to create parcelamento');
+    }
+    return json.decode(res.body) as Map<String, dynamic>;
   }
 
   Future<List<MovementType>> fetchTypes() async {

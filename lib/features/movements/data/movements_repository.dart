@@ -3,6 +3,7 @@ import 'movements_api.dart';
 import '../models/movement_type.dart';
 import '../models/category.dart';
 import '../models/account.dart';
+import '../models/contact.dart';
 
 class MovementsRepository {
   final MovementsApi api;
@@ -22,6 +23,12 @@ class MovementsRepository {
     String? dtVencimento,
     required double valor,
     int? idTipoMovimentacao,
+    int? idCategoria,
+    int? idLocalOrigem,
+    int? idLocalDestino,
+    int? idContato,
+    int? isPago,
+    String? dtPagamento,
   }) {
     return api.createMovement(
       idpessoa: idpessoa,
@@ -32,6 +39,12 @@ class MovementsRepository {
       dtVencimento: dtVencimento,
       valor: valor,
       idTipoMovimentacao: idTipoMovimentacao,
+      idCategoria: idCategoria,
+      idLocalOrigem: idLocalOrigem,
+      idLocalDestino: idLocalDestino,
+      idContato: idContato,
+      isPago: isPago,
+      dtPagamento: dtPagamento,
     );
   }
 
@@ -45,5 +58,41 @@ class MovementsRepository {
 
   Future<List<Account>> getAccounts() {
     return api.fetchAccounts();
+  }
+
+  Future<List<Contact>> getContacts() {
+    return api.fetchContacts();
+  }
+
+  Future<Map<String, dynamic>> createParcelamento({
+    required int idpessoa,
+    required String tipo,
+    required String nome,
+    String? descricao,
+    int? qtdParcelas,
+    required String recurrenceType,
+    required double valorParcela,
+    required String dtInicio,
+    int? idLocalOrigem,
+    int? idLocalDestino,
+    int? idContato,
+    int? idTipoMovimentacao,
+    int? idCategoria,
+  }) {
+    return api.createParcelamento(
+      idpessoa: idpessoa,
+      tipo: tipo,
+      nome: nome,
+      descricao: descricao,
+      qtdParcelas: qtdParcelas,
+      recurrenceType: recurrenceType,
+      valorParcela: valorParcela,
+      dtInicio: dtInicio,
+      idLocalOrigem: idLocalOrigem,
+      idLocalDestino: idLocalDestino,
+      idContato: idContato,
+      idTipoMovimentacao: idTipoMovimentacao,
+      idCategoria: idCategoria,
+    );
   }
 }
