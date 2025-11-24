@@ -52,14 +52,45 @@ class MovementsApi {
     return Uri.parse('$base/$path');
   }
 
-  Future<List<Movement>> fetchMovements({required int idpessoa, String? startDate, String? endDate}) async {
-    final Uri uri = buildGetMovementsUri(idpessoa, startDate: startDate, endDate: endDate);
+  Future<List<Movement>> fetchMovements({
+    required int idpessoa,
+    String? startDate,
+    String? endDate,
+  }) async {
+    final Uri uri = buildGetMovementsUri(
+      idpessoa,
+      startDate: startDate,
+      endDate: endDate,
+    );
     final http.Response res = await http.get(uri);
     if (res.statusCode != 200) {
       throw Exception('Failed to load movements');
     }
-    final List<dynamic> data = json.decode(res.body) as List<dynamic>;
-    return data.map((e) => Movement.fromJson(e as Map<String, dynamic>)).toList();
+    dynamic decoded;
+    try {
+      decoded = json.decode(res.body);
+    } catch (e) {
+      dev.log('fetchMovements: JSON decode error', error: e);
+      return <Movement>[];
+    }
+    if (decoded is List) {
+      final List<Map<String, dynamic>> items = decoded
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      return items.map(Movement.fromJson).toList();
+    }
+    if (decoded is Map) {
+      final Map<dynamic, dynamic> map = Map<dynamic, dynamic>.from(
+        decoded as Map,
+      );
+      final List<Map<String, dynamic>> items = map.values
+          .map((v) => Map<String, dynamic>.from(v as Map))
+          .toList();
+      return items.map(Movement.fromJson).toList();
+    }
+
+    dev.log('fetchMovements: unexpected decoded type=${decoded.runtimeType}');
+    return <Movement>[];
   }
 
   Future<void> createMovement({
@@ -88,19 +119,27 @@ class MovementsApi {
       'dt_movimentacao': dtMovimentacao,
       'dt_vencimento': dtVencimento,
       'valor': valor,
-      if (idTipoMovimentacao != null) 'id_tipo_movimentacao': idTipoMovimentacao,
+      if (idTipoMovimentacao != null)
+        'id_tipo_movimentacao': idTipoMovimentacao,
       if (idCategoria != null) 'id_categoria': idCategoria,
       if (idLocalOrigem != null) 'id_local_origem': idLocalOrigem,
       if (idLocalDestino != null) 'id_local_destino': idLocalDestino,
       if (idContato != null) 'id_contato': idContato,
       if (isPago != null) 'is_pago': isPago,
       if (dtPagamento != null) 'dt_pagamento': dtPagamento,
-      if (contatoNome != null && contatoNome.isNotEmpty) 'contato_nome': contatoNome,
+      if (contatoNome != null && contatoNome.isNotEmpty)
+        'contato_nome': contatoNome,
     };
     dev.log('createMovement: POST $uri');
     dev.log('createMovement body keys: ${body.keys.toList()}');
-    dev.log('createMovement ids: categoria=$idCategoria, origem=$idLocalOrigem, destino=$idLocalDestino, contato=$idContato, tipoId=$idTipoMovimentacao');
-    final http.Response res = await http.post(uri, headers: {'Content-Type': 'application/json'}, body: json.encode(body));
+    dev.log(
+      'createMovement ids: categoria=$idCategoria, origem=$idLocalOrigem, destino=$idLocalDestino, contato=$idContato, tipoId=$idTipoMovimentacao',
+    );
+    final http.Response res = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(body),
+    );
     if (res.statusCode != 201) {
       throw Exception('Failed to create movement');
     }
@@ -113,7 +152,9 @@ class MovementsApi {
       throw Exception('Failed to load contacts');
     }
     final List<dynamic> data = json.decode(res.body) as List<dynamic>;
-    return data.map((e) => Contact.fromJson(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => Contact.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<Map<String, dynamic>> createParcelamento({
@@ -150,11 +191,16 @@ class MovementsApi {
       'id_contato': idContato,
       'id_tipo_movimentacao': idTipoMovimentacao,
       'id_categoria': idCategoria,
-      if (contatoNome != null && contatoNome.isNotEmpty) 'contato_nome': contatoNome,
+      if (contatoNome != null && contatoNome.isNotEmpty)
+        'contato_nome': contatoNome,
     };
     dev.log('createParcelamento: POST $uri');
     dev.log('createParcelamento body: ${body}');
-    final http.Response res = await http.post(uri, headers: {'Content-Type': 'application/json'}, body: json.encode(body));
+    final http.Response res = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(body),
+    );
     if (res.statusCode != 201) {
       throw Exception('Failed to create parcelamento');
     }
@@ -168,7 +214,9 @@ class MovementsApi {
     dev.log('fetchTypes: status ${res.statusCode}');
     dev.log('fetchTypes: body len ${res.body.length}');
     if (res.statusCode != 200) {
-      throw Exception('Failed to load movement types (status: ${res.statusCode})');
+      throw Exception(
+        'Failed to load movement types (status: ${res.statusCode})',
+      );
     }
     dynamic decoded;
     try {
@@ -190,7 +238,11 @@ class MovementsApi {
           final MovementType t = MovementType.fromJson(item);
           result.add(t);
         } catch (e) {
-          dev.log('fetchTypes: item parse failed', error: e, name: 'MovementType');
+          dev.log(
+            'fetchTypes: item parse failed',
+            error: e,
+            name: 'MovementType',
+          );
         }
       } else {
         dev.log('fetchTypes: skipping non-Map item type=${item.runtimeType}');
@@ -207,7 +259,9 @@ class MovementsApi {
       throw Exception('Failed to load categories');
     }
     final List<dynamic> data = json.decode(res.body) as List<dynamic>;
-    return data.map((e) => Category.fromJson(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => Category.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<List<Account>> fetchAccounts() async {
@@ -217,6 +271,8 @@ class MovementsApi {
       throw Exception('Failed to load accounts');
     }
     final List<dynamic> data = json.decode(res.body) as List<dynamic>;
-    return data.map((e) => Account.fromJson(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => Account.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 }

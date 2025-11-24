@@ -115,7 +115,7 @@ class _MovementsTable extends StatelessWidget {
         final Movement m = items[i];
         final bool isIncome = m.valor >= 0;
         return ListTile(
-          title: Text(m.nomeMovimentacao),
+          title: Text('${m.nomeMovimentacao} \n(Quem? - ${m.contatoNome})'),
           subtitle: Text('${m.tipoMovimentacao} • ${m.dtMovimentacao}${m.dtVencimento != null ? ' • ${m.dtVencimento}' : ''}'),
           trailing: Text(
             m.valor.toStringAsFixed(2),
